@@ -1,0 +1,93 @@
+import pygame
+import sys
+import random
+
+# 初始化Pygame
+pygame.init()
+
+# 设置屏幕大小
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+
+# 设置窗口标题
+pygame.display.set_caption("飞机大战")
+
+# 设置时钟
+clock = pygame.time.Clock()
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("player.png")  # 加载玩家飞机图片
+        self.rect = self.image.get_rect()
+        self.rect.center = (screen_width // 2, screen_height - 50)
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= 5
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += 5
+
+        # 防止飞机移出屏幕
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > screen_width:
+            self.rect.right = screen_width
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("enemy.png")  # 加载敌机图片
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, screen_width - self.rect.width)
+        self.rect.y = random.randint(-100, -50)
+        self.speed = random.randint(1, 3)
+
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.top > screen_height:
+            self.rect.x = random.randint(0, screen_width - self.rect.width)
+            self.rect.y = random.randint(-100, -50)
+            self.speed = random.randint(1, 3)
+
+# 创建玩家和敌机组
+player = Player()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+
+enemies = pygame.sprite.Group()
+for _ in range(10):
+    enemy = Enemy()
+    all_sprites.add(enemy)
+    enemies.add(enemy)
+
+# 游戏主循环
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # 更新游戏状态
+    all_sprites.update()
+
+    # 碰撞检测
+    if pygame.sprite.spritecollideany(player, enemies):
+        print("游戏结束！")
+        running = False
+
+    # 绘制游戏对象
+    screen.fill((0, 0, 0))  # 清屏
+    all_sprites.draw(screen)
+
+    # 更新显示
+    pygame.display.flip()
+
+    # 控制帧率
+    clock.tick(60)
+
+# 退出游戏
+pygame.quit()
+sys.exit()
